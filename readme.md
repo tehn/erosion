@@ -2,6 +2,8 @@
 
 cool maritime / tehn collaborative vision
 
+for iii arc
+
 four meta-knobs controlling four midi cc each
 
 # PLAY
