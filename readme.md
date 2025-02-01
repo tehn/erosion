@@ -34,20 +34,26 @@ first you will be presented with which knob to edit, the knobs will pulse. selec
 
 now you are editing cc min, max, slew, and ch for the four elements of the knob you previously selected.
 
-- key/short: change parameter (min, max, slew, cc)
+- key/short: change parameter (min, max, slew, cc, ch)
 - key/long: save, returns to PLAY
 - delta n: change parameter value
 
 each knob displays the parameter value (CCW towards zero, CW towards max). below each knob is an indicator of the parameter, shown as three tick marks.
 
 - left: min
-- center: slew
 - right: max
+- center: slew
+
+cc is displayed on the right side as pixel-numbers from top-to-bottom: 1, 1-9, 1-9. to get the cc number, assemble the digits. (or see the diii screen for a numeric!)
+
+ch is displayed on the left side as a pixel number 1-16.
 
 TODO: slew is not yet implemented
-TODO: invisible fourth parameter, cc number, is not yet implemented
 
-changes to min and max will send the this cc value via midi, to help tune your instruments to the ranges you seek.
+changes to min and max will send the this cc value via midi, to help tune your instruments to the ranges you seek. when changing parameter modes all cc positions will be sent.
 
 after editing be sure to save your SCENE so it will return next time.
 
+note that a SCENE will be saved with current positions of each knob, so resuming in the exact state is assured.
+
+when booting up the last-saved SCENE will be active.

@@ -6,25 +6,25 @@ cc = {
 	p = {0,0,0,0}
 }
 
-cc[1][1] = {cc=10, min=0, max=127, val=0, v=0}
-cc[1][2] = {cc=11, min=10, max=100, val=0, v=0}
-cc[1][3] = {cc=12, min=20, max=80, val=0, v=0}
-cc[1][4] = {cc=13, min=30, max=60, val=0, v=0}
+cc[1][1] = {cc=10, slew=0, min=0, max=127, val=0, v=0}
+cc[1][2] = {cc=11, slew=0, min=10, max=100, val=0, v=0}
+cc[1][3] = {cc=12, slew=0, min=20, max=80, val=0, v=0}
+cc[1][4] = {cc=13, slew=0, min=30, max=60, val=0, v=0}
 
-cc[2][1] = {cc=14, min=0, max=127, val=0, v=0}
-cc[2][2] = {cc=15, min=0, max=127, val=0, v=0}
-cc[2][3] = {cc=16, min=0, max=127, val=0, v=0}
-cc[2][4] = {cc=17, min=0, max=127, val=0, v=0}
+cc[2][1] = {cc=14, slew=0, min=0, max=127, val=0, v=0}
+cc[2][2] = {cc=15, slew=0, min=0, max=127, val=0, v=0}
+cc[2][3] = {cc=16, slew=0, min=0, max=127, val=0, v=0}
+cc[2][4] = {cc=17, slew=0, min=0, max=127, val=0, v=0}
 
-cc[3][1] = {cc=18, min=0, max=127, val=0, v=0}
-cc[3][2] = {cc=19, min=0, max=127, val=0, v=0}
-cc[3][3] = {cc=20, min=0, max=127, val=0, v=0}
-cc[3][4] = {cc=21, min=0, max=127, val=0, v=0}
+cc[3][1] = {cc=18, slew=0, min=0, max=127, val=0, v=0}
+cc[3][2] = {cc=19, slew=0, min=0, max=127, val=0, v=0}
+cc[3][3] = {cc=20, slew=0, min=0, max=127, val=0, v=0}
+cc[3][4] = {cc=21, slew=0, min=0, max=127, val=0, v=0}
 
-cc[4][1] = {cc=22, min=0, max=127, val=0, v=0}
-cc[4][2] = {cc=23, min=0, max=127, val=0, v=0}
-cc[4][3] = {cc=24, min=0, max=127, val=0, v=0}
-cc[4][4] = {cc=25, min=0, max=127, val=0, v=0}
+cc[4][1] = {cc=22, slew=0, min=0, max=127, val=0, v=0}
+cc[4][2] = {cc=23, slew=0, min=0, max=127, val=0, v=0}
+cc[4][3] = {cc=24, slew=0, min=0, max=127, val=0, v=0}
+cc[4][4] = {cc=25, slew=0, min=0, max=127, val=0, v=0}
 
 
 meta = {
@@ -35,13 +35,17 @@ meta = {
 	slot = { {},{},{},{},{},{},{},{} },
 }
 
-temp = pset_read(1)
-if not temp or temp.script ~= "erosion" then
-	print("writing default pset")
-	pset_write(1,meta)
-else
-	meta = temp
-	print("read pset metadata")
+function init()
+	temp = pset_read(1)
+	if not temp or temp.script ~= "erosion" then
+		print("writing default pset")
+		pset_write(1,meta)
+	else
+		meta = temp
+		print("read pset metadata")
+		cc = pset_read(1+(meta.bank-1)*8+meta.scene)
+		delta_update_all()
+	end
 end
 
 
@@ -73,6 +77,20 @@ function delta_normal(n,d)
 		dirty = true
 		--arc_refresh()
 		--ps("%d %d %d %d %d %d",n,p[n],cc[n][1].val,cc[n][2].val,cc[n][3].val,cc[n][4].val)
+	end
+end
+
+function delta_update_all()
+	for n=1,4 do
+		for k=1,4 do
+			local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,cc.p[n])
+			cc[n][k].v = b
+			local c = math.floor(b)
+			if(c ~= cc[n][k].val) then
+				cc[n][k].val = c
+				midi_cc(cc[n][k].cc,c)
+			end
+		end
 	end
 end
 
@@ -144,6 +162,7 @@ function delta_select(n,d)
 	if selected == false then
 		selected = true
 		edit_n = n
+		metro.stop(sm1)
 		sm2 = metro.new(select_wait, 500, 1)		
 	end
 end
@@ -175,6 +194,7 @@ end
 
 -- EDIT
 --
+param_name = {"MIN","MAX","SLEW","CC-CH"}
 function enter_edit()
 	param = 1
 end
@@ -196,19 +216,47 @@ function delta_edit(n,d)
 			midi_cc(cc[edit_n][n].cc,a)
 			dirty = true
 		end
+	elseif param == 3 then
+		local l = cc[edit_n][n].slew
+		local a = clamp(l - d,0,127)
+		if l ~= a then
+			cc[edit_n][n].slew = a
+			dirty = true
+		end
+	elseif param == 4 then
+		local l = cc[edit_n][n].cc
+		local a = clamp(l + d,0,127)
+		if l ~= a then
+			cc[edit_n][n].cc = a
+			ps("cc %d,%d = %d",edit_n,n,a)
+			dirty = true
+		end
 	end
 end
 
 function redraw_edit()
 	for n=1,4 do
 		arc_led_all(n,0)
-		arc_led(n,29,param == 1 and 10 or 1)
-		arc_led(n,37,param == 2 and 10 or 1)
+		arc_led(n,30,param == 1 and 10 or 1)
+		arc_led(n,36,param == 2 and 10 or 1)
 		arc_led(n,33,param == 3 and 10 or 1)
 		if param == 1 then
 			point2(n,cc[edit_n][n].min * 8)
 		elseif param == 2 then
 			point2(n,cc[edit_n][n].max * 8)
+		elseif param == 3 then
+			point2(n,cc[edit_n][n].slew * 8)
+		elseif param == 4 then
+			local z = cc[edit_n][n].cc
+			local a = math.floor(z / 100)
+			local b = math.floor((z%100)/10)
+			local c = math.floor(z%10)
+			--ps("%d = %d %d %d",z,a,b,c)
+			arc_led(n,63,a==1 and 10 or 1)
+			for i=1,9 do
+				arc_led(n,51+i,b==i and 10 or 1)
+				arc_led(n,40+i,c==i and 10 or 1)
+			end
 		end
 	end
 end
@@ -254,7 +302,12 @@ function arc_key(z)
 		elseif mode==4 then
 			print("EDIT MODE: TOGGLE PARAM")
 			param = (param % 4) + 1
-			ps("PARAM: %s", param)
+			ps("PARAM: %s", param_name[param])
+			if param==1 then
+				for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end
+			elseif param==2 then
+				for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].max) end
+			end
 			dirty = true
 		end
 	end
@@ -262,6 +315,7 @@ end
 
 function key_timer()
 	--print("keylong!")
+	metro.stop(km)
 	km = nil
 	if mode==1 then
 		set_mode(3)
@@ -298,6 +352,8 @@ function key_timer()
 	elseif mode==4 then
 		set_mode(1)
 		print("TO NORMAL MODE")
+		print("UPDATE ALL POSITIONS")
+		delta_update_all()
 	end
 end
 
@@ -321,4 +377,4 @@ function point2(n,x)
 end
 
 
-
+init()
