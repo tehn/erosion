@@ -6,25 +6,25 @@ cc = {
 	p = {0,0,0,0}
 }
 
-cc[1][1] = {cc=10, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[1][2] = {cc=11, ch=1, a=true, slew=0, min=10, max=100, val=0, v=0}
-cc[1][3] = {cc=12, ch=1, a=true, slew=0, min=20, max=80, val=0, v=0}
-cc[1][4] = {cc=13, ch=1, a=true, slew=0, min=30, max=60, val=0, v=0}
+cc[1][1] = {cc=10, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[1][2] = {cc=11, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[1][3] = {cc=12, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[1][4] = {cc=13, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[2][1] = {cc=14, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[2][2] = {cc=15, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[2][3] = {cc=16, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[2][4] = {cc=17, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[2][1] = {cc=14, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[2][2] = {cc=15, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[2][3] = {cc=16, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[2][4] = {cc=17, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[3][1] = {cc=18, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[3][2] = {cc=19, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[3][3] = {cc=20, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[3][4] = {cc=21, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[3][1] = {cc=18, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[3][2] = {cc=19, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[3][3] = {cc=20, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[3][4] = {cc=21, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[4][1] = {cc=22, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[4][2] = {cc=23, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[4][3] = {cc=24, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
-cc[4][4] = {cc=25, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[4][1] = {cc=22, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[4][2] = {cc=23, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[4][3] = {cc=24, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+cc[4][4] = {cc=25, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
 
 meta = {
@@ -74,7 +74,7 @@ function delta_normal(n,d)
 				local c = math.floor(b)
 				if(c ~= cc[n][k].val) then
 					cc[n][k].val = c
-					midi_cc(cc[n][k].cc,c)
+					midi_cc(cc[n][k].cc,c,cc[n][k].ch)
 				end
 				--point2(n,math.floor(b*8.0))
 			end
@@ -94,7 +94,7 @@ function delta_update_all()
 				local c = math.floor(b)
 				if(c ~= cc[n][k].val) then
 					cc[n][k].val = c
-					midi_cc(cc[n][k].cc,c)
+					midi_cc(cc[n][k].cc,c,cc[n][k].ch)
 				end
 			end
 		end
@@ -205,7 +205,7 @@ function select_wait()
 	print("TO EDIT MODE")
 	for n=1,4 do 
 		if cc[edit_n][n].a then
-			midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min)
+			midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min,cc[edit_n][n].ch)
 		end
 	end
 end
@@ -226,7 +226,7 @@ function delta_edit(n,d)
 		local a = clamp(l - d,0,127)
 		if l ~= a then
 			cc[edit_n][n].min = a
-			midi_cc(cc[edit_n][n].cc,a)
+			midi_cc(cc[edit_n][n].cc,a,cc[edit_n][n].ch)
 			dirty = true
 		end
 	elseif param == 2 then
@@ -234,7 +234,7 @@ function delta_edit(n,d)
 		local a = clamp(l - d,0,127)
 		if l ~= a then
 			cc[edit_n][n].max = a
-			midi_cc(cc[edit_n][n].cc,a)
+			midi_cc(cc[edit_n][n].cc,a,cc[edit_n][n].ch)
 			dirty = true
 		end
 	elseif param == 3 then
@@ -344,10 +344,10 @@ function arc_key(z)
 			ps("PARAM: %s", param_name[param])
 			if param==1 then
 				for n=1,4 do if cc[edit_n][n].a then
-					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end end
+					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min,cc[edit_n][n].ch) end end
 			elseif param==2 then
 				for n=1,4 do if cc[edit_n][n].a then
-					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].max) end end
+					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].max,cc[edit_n][n].ch) end end
 			end
 			dirty = true
 		end
