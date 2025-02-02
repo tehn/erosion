@@ -32,11 +32,13 @@ if ring 3/4 are not lit, action is LOAD (default).
 
 first you will be presented with which knob to edit, the knobs will pulse. select by turning the chosen knob either direction slightly. a short timeout will confirm your selection.
 
-now you are editing cc min, max, slew, and ch for the four elements of the knob you previously selected.
+now you are editing parameters for the four elements of the knob you previously selected.
 
-- key/short: change parameter (min, max, slew, cc, ch)
+- key/short: change parameter (min, max, slew, cc, ch, active)
 - key/long: save, returns to PLAY
 - delta n: change parameter value
+
+PARAMETER CYCLE: min, max, slew, cc number, cc midi channel, active
 
 each knob displays the parameter value (CCW towards zero, CW towards max). below each knob is an indicator of the parameter, shown as three tick marks.
 
@@ -48,7 +50,7 @@ cc is displayed on the right side as pixel-numbers from top-to-bottom: 1, 1-9, 1
 
 ch is displayed on the left side as a pixel number 1-16.
 
-TODO: slew is not yet implemented
+active is shown with a half-circle over the top of the ring. deactivated positions cease to display the three ticks at the bottom as a reminder of this off-state.
 
 changes to min and max will send the this cc value via midi, to help tune your instruments to the ranges you seek. when changing parameter modes all cc positions will be sent.
 
@@ -57,3 +59,8 @@ after editing be sure to save your SCENE so it will return next time.
 note that a SCENE will be saved with current positions of each knob, so resuming in the exact state is assured.
 
 when booting up the last-saved SCENE will be active.
+
+
+# TODO
+
+- slew is not yet implemented
