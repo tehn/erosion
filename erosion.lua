@@ -6,25 +6,25 @@ cc = {
 	p = {0,0,0,0}
 }
 
-cc[1][1] = {cc=10, slew=0, min=0, max=127, val=0, v=0}
-cc[1][2] = {cc=11, slew=0, min=10, max=100, val=0, v=0}
-cc[1][3] = {cc=12, slew=0, min=20, max=80, val=0, v=0}
-cc[1][4] = {cc=13, slew=0, min=30, max=60, val=0, v=0}
+cc[1][1] = {cc=10, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[1][2] = {cc=11, ch=1, a=true, slew=0, min=10, max=100, val=0, v=0}
+cc[1][3] = {cc=12, ch=1, a=true, slew=0, min=20, max=80, val=0, v=0}
+cc[1][4] = {cc=13, ch=1, a=true, slew=0, min=30, max=60, val=0, v=0}
 
-cc[2][1] = {cc=14, slew=0, min=0, max=127, val=0, v=0}
-cc[2][2] = {cc=15, slew=0, min=0, max=127, val=0, v=0}
-cc[2][3] = {cc=16, slew=0, min=0, max=127, val=0, v=0}
-cc[2][4] = {cc=17, slew=0, min=0, max=127, val=0, v=0}
+cc[2][1] = {cc=14, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[2][2] = {cc=15, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[2][3] = {cc=16, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[2][4] = {cc=17, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
 
-cc[3][1] = {cc=18, slew=0, min=0, max=127, val=0, v=0}
-cc[3][2] = {cc=19, slew=0, min=0, max=127, val=0, v=0}
-cc[3][3] = {cc=20, slew=0, min=0, max=127, val=0, v=0}
-cc[3][4] = {cc=21, slew=0, min=0, max=127, val=0, v=0}
+cc[3][1] = {cc=18, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[3][2] = {cc=19, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[3][3] = {cc=20, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[3][4] = {cc=21, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
 
-cc[4][1] = {cc=22, slew=0, min=0, max=127, val=0, v=0}
-cc[4][2] = {cc=23, slew=0, min=0, max=127, val=0, v=0}
-cc[4][3] = {cc=24, slew=0, min=0, max=127, val=0, v=0}
-cc[4][4] = {cc=25, slew=0, min=0, max=127, val=0, v=0}
+cc[4][1] = {cc=22, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[4][2] = {cc=23, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[4][3] = {cc=24, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
+cc[4][4] = {cc=25, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0}
 
 
 meta = {
@@ -45,6 +45,9 @@ function init()
 		print("read pset metadata")
 		cc = pset_read(1+(meta.bank-1)*8+meta.scene)
 		delta_update_all()
+		-- CAN REMOVE LATER:
+		if not cc[1][1].ch then for x=1,4 do for y=1,4 do cc[x][y].ch = 1 end end end
+		if not cc[1][1].a then for x=1,4 do for y=1,4 do cc[x][y].a = true end end end
 	end
 end
 
@@ -65,14 +68,16 @@ function delta_normal(n,d)
 		cc.p[n] = a
 		--arc_led_all(n,0)
 		for k=1,4 do
-			local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,a)
-			cc[n][k].v = b
-			local c = math.floor(b)
-			if(c ~= cc[n][k].val) then
-				cc[n][k].val = c
-				midi_cc(cc[n][k].cc,c)
+			if cc[n][k].a then
+				local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,a)
+				cc[n][k].v = b
+				local c = math.floor(b)
+				if(c ~= cc[n][k].val) then
+					cc[n][k].val = c
+					midi_cc(cc[n][k].cc,c)
+				end
+				--point2(n,math.floor(b*8.0))
 			end
-			--point2(n,math.floor(b*8.0))
 		end
 		dirty = true
 		--arc_refresh()
@@ -83,12 +88,14 @@ end
 function delta_update_all()
 	for n=1,4 do
 		for k=1,4 do
-			local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,cc.p[n])
-			cc[n][k].v = b
-			local c = math.floor(b)
-			if(c ~= cc[n][k].val) then
-				cc[n][k].val = c
-				midi_cc(cc[n][k].cc,c)
+			if cc[n][k].a then
+				local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,cc.p[n])
+				cc[n][k].v = b
+				local c = math.floor(b)
+				if(c ~= cc[n][k].val) then
+					cc[n][k].val = c
+					midi_cc(cc[n][k].cc,c)
+				end
 			end
 		end
 	end
@@ -98,7 +105,9 @@ function redraw_normal()
 	for n=1,4 do
 		arc_led_all(n,0)
 		for k=1,4 do
-			point2(n,math.floor(cc[n][k].v*8.0))
+			if cc[n][k].a then
+				point2(n,math.floor(cc[n][k].v*8.0))
+			end
 		end
 	end
 end
@@ -194,14 +203,19 @@ function select_wait()
 	metro.stop(sm1)
 	set_mode(4)
 	print("TO EDIT MODE")
-	for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end
+	for n=1,4 do 
+		if cc[edit_n][n].a then
+			midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min)
+		end
+	end
 end
 
 
 
 -- EDIT
 --
-param_name = {"MIN","MAX","SLEW","CC-CH"}
+TOTAL_PARAMS = 6
+param_name = {"MIN","MAX","SLEW","CC NUM","CC CH","ACTIVE"}
 function enter_edit()
 	param = 1
 end
@@ -238,15 +252,27 @@ function delta_edit(n,d)
 			ps("cc %d,%d = %d",edit_n,n,a)
 			dirty = true
 		end
+	elseif param == 5 then
+		local l = cc[edit_n][n].ch
+		local a = clamp(l - d,1,16)
+		if l ~= a then
+			cc[edit_n][n].ch = a
+			ps("ch %d,%d = %d",edit_n,n,a)
+			dirty = true
+		end
+	elseif param == 6 then
+		cc[edit_n][n].a = d<0
+		dirty = true
 	end
 end
 
 function redraw_edit()
 	for n=1,4 do
+		local act = cc[edit_n][n].a and 1 or 0
 		arc_led_all(n,0)
-		arc_led(n,30,param == 1 and 10 or 1)
-		arc_led(n,36,param == 2 and 10 or 1)
-		arc_led(n,33,param == 3 and 10 or 1)
+		arc_led(n,30,param == 1 and 10 or act)
+		arc_led(n,36,param == 2 and 10 or act)
+		arc_led(n,33,param == 3 and 10 or act)
 		if param == 1 then
 			point2(n,cc[edit_n][n].min * 8)
 		elseif param == 2 then
@@ -264,6 +290,12 @@ function redraw_edit()
 				arc_led(n,51+i,b==i and 10 or 1)
 				arc_led(n,40+i,c==i and 10 or 1)
 			end
+		elseif param == 5 then
+			for i=1,16 do
+				arc_led(n,24-i,cc[edit_n][n].ch==i and 10 or 1)
+			end
+		elseif param == 6 then
+			for i=1,32 do arc_led(n,(47+i)%64+1,cc[edit_n][n].a and 1 or 0) end
 		end
 	end
 end
@@ -308,12 +340,14 @@ function arc_key(z)
 			metro.stop(sm1)
 		elseif mode==4 then
 			print("EDIT MODE: TOGGLE PARAM")
-			param = (param % 4) + 1
+			param = (param % TOTAL_PARAMS) + 1
 			ps("PARAM: %s", param_name[param])
 			if param==1 then
-				for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end
+				for n=1,4 do if cc[edit_n][n].a then
+					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end end
 			elseif param==2 then
-				for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].max) end
+				for n=1,4 do if cc[edit_n][n].a then
+					midi_cc(cc[edit_n][n].cc,cc[edit_n][n].max) end end
 			end
 			dirty = true
 		end
@@ -334,8 +368,11 @@ function key_timer()
 				print("LOAD PSET")
 				print("TO NORMAL MODE")
 				pset_write(1,meta)
-				-- STOP SLEWS!
+				-- TODO STOP SLEWS!
 				cc = pset_read(1+(meta.bank-1)*8+meta.scene)
+				-- CAN REMOVE LATER:
+				if not cc[1][1].ch then for x=1,4 do for y=1,4 do cc[x][y].ch = 1 end end end
+				if not cc[1][1].a then for x=1,4 do for y=1,4 do cc[x][y].a = true end end end
 			else
 				print("NO PSET HERE")
 			end
