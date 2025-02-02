@@ -26,8 +26,6 @@ cc[4][2] = {cc=23, slew=0, min=0, max=127, val=0, v=0}
 cc[4][3] = {cc=24, slew=0, min=0, max=127, val=0, v=0}
 cc[4][4] = {cc=25, slew=0, min=0, max=127, val=0, v=0}
 
-function export() print(_quote(cc)) end
-
 
 meta = {
 	script = "erosion",
@@ -155,24 +153,28 @@ function enter_select()
 	print("ENTER SELECT!")
 	edit_n = 0
 	selected = false
-	select_level = 4
+	select_level = 2
+	seldelta = {0,0,0,0}
 	dirty = true
-	sm1 = metro.new(select_pulse, 100, -1)
+	sm1 = metro.new(select_pulse, 150, -1)
 end
 
 function delta_select(n,d)
 	if selected == false then
-		selected = true
-		edit_n = n
-		metro.stop(sm1)
-		sm2 = metro.new(select_wait, 500, 1)		
+		seldelta[n] = seldelta[n] + d
+		if math.abs(seldelta[n]) > 5 then
+			selected = true
+			select_level = 4
+			edit_n = n
+			sm2 = metro.new(select_wait, 600, 1)		
+		end
 	end
 end
 
 function redraw_select()
 	if not selected then
 		for n=1,4 do
-			arc_led_all(n,select_level)
+			arc_led_all(n,select_level + math.abs(seldelta[n]))
 		end
 	else
 		for n=1,4 do
@@ -182,7 +184,8 @@ function redraw_select()
 end
 
 function select_pulse()
-	select_level = (select_level-2) % 4 + 1
+	if not selected then select_level = (select_level % 2) + 1
+	else select_level = select_level - 1 end
 	dirty = true
 end
 
