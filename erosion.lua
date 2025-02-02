@@ -26,6 +26,8 @@ cc[4][2] = {cc=23, slew=0, min=0, max=127, val=0, v=0}
 cc[4][3] = {cc=24, slew=0, min=0, max=127, val=0, v=0}
 cc[4][4] = {cc=25, slew=0, min=0, max=127, val=0, v=0}
 
+function export() print(_quote(cc)) end
+
 
 meta = {
 	script = "erosion",
@@ -188,6 +190,8 @@ function select_wait()
 	print("wait")
 	metro.stop(sm1)
 	set_mode(4)
+	print("TO EDIT MODE")
+	for n=1,4 do midi_cc(cc[edit_n][n].cc,cc[edit_n][n].min) end
 end
 
 
