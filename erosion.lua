@@ -6,26 +6,33 @@ cc = {
 	p = {0,0,0,0}
 }
 
-cc[1][1] = {cc=10, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[1][2] = {cc=11, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[1][3] = {cc=12, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[1][4] = {cc=13, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+function init_cc()
+	cc[1][1] = {cc=10, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[1][2] = {cc=11, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[1][3] = {cc=12, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[1][4] = {cc=13, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[2][1] = {cc=14, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[2][2] = {cc=15, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[2][3] = {cc=16, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[2][4] = {cc=17, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[2][1] = {cc=14, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[2][2] = {cc=15, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[2][3] = {cc=16, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[2][4] = {cc=17, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[3][1] = {cc=18, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[3][2] = {cc=19, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[3][3] = {cc=20, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[3][4] = {cc=21, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[3][1] = {cc=18, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[3][2] = {cc=19, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[3][3] = {cc=20, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[3][4] = {cc=21, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
 
-cc[4][1] = {cc=22, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[4][2] = {cc=23, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[4][3] = {cc=24, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
-cc[4][4] = {cc=25, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[4][1] = {cc=22, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[4][2] = {cc=23, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[4][3] = {cc=24, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+	cc[4][4] = {cc=25, ch=1, a=true, slew=0, min=0, max=127, val=0, v=0, s=0}
+end
 
+init_cc()
+
+mode = 1
+param = 1
+dirty = true
 
 meta = {
 	script = "erosion",
@@ -36,47 +43,76 @@ meta = {
 }
 
 function init()
+	print("\\\\ erosion \\\\\\\\")
 	temp = pset_read(1)
 	if not temp or temp.script ~= "erosion" then
 		print("writing default pset")
 		pset_write(1,meta)
+		pset_write(1+(meta.bank-1)*8+meta.scene,cc)
 	else
 		meta = temp
 		print("read pset metadata")
 		cc = pset_read(1+(meta.bank-1)*8+meta.scene)
+		-- reset slew positions:
+		for n=1,4 do
+			for k=1,4 do
+				slew.to(sl[n][k], cc.p[n], 0)
+			end
+		end
 		delta_update_all()
 		-- CAN REMOVE LATER:
 		if not cc[1][1].ch then for x=1,4 do for y=1,4 do cc[x][y].ch = 1 end end end
 		if not cc[1][1].a then for x=1,4 do for y=1,4 do cc[x][y].a = true end end end
 	end
+	-- start redraw
+	rm = metro.new(redraw, 33, -1)
+	set_mode(1)
 end
 
-
-mode = 1
-param = 1
-dirty = true
 
 
 RANGE = 1023
 -- NORMAL
 --
-function enter_normal() end
+function enter_normal()
+	for i=1,4 do arc_res(i,1) end
+end
+
+function delta_slew(n,k,a)
+	--print("delta_slew",n,k,a)
+	local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,a)
+	cc[n][k].v = b
+	local c = math.floor(b)
+	if(c ~= cc[n][k].val) then
+		--print("cc to "..c)
+		cc[n][k].val = c
+		midi_cc(cc[n][k].cc,c,cc[n][k].ch)
+	end
+	--point2(n,math.floor(b*8.0))
+	dirty = true
+end
 
 function delta_normal(n,d)
-	local a = clamp(cc.p[n] - d*4,0,RANGE)
+	local a = clamp(cc.p[n] + d*4,0,RANGE)
 	if(cc.p[n] ~= a) then
 		cc.p[n] = a
 		--arc_led_all(n,0)
 		for k=1,4 do
 			if cc[n][k].a then
-				local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,a)
-				cc[n][k].v = b
-				local c = math.floor(b)
-				if(c ~= cc[n][k].val) then
-					cc[n][k].val = c
-					midi_cc(cc[n][k].cc,c,cc[n][k].ch)
+				if cc[n][k].slew > 0 then
+					local sss = cc[n][k].slew * 32
+					--print("start slew "..sss)
+					slew.to(sl[n][k], a, sss)
+				else
+					local b = linlin(0,RANGE,cc[n][k].min,cc[n][k].max,a)
+					cc[n][k].v = b
+					local c = math.floor(b)
+					if(c ~= cc[n][k].val) then
+						cc[n][k].val = c
+						midi_cc(cc[n][k].cc,c,cc[n][k].ch)
+					end
+					--point2(n,math.floor(b*8.0))
 				end
-				--point2(n,math.floor(b*8.0))
 			end
 		end
 		dirty = true
@@ -112,11 +148,20 @@ function redraw_normal()
 	end
 end
 
+sl = {{},{},{},{}}
+for n=1,4 do
+	for k=1,4 do
+		do sl[n][k] = slew.new(function(a) delta_slew(n,k,a) end,0,cc.p[n],0) end
+	end
+end
+
 
 s = {0,0}
 -- SCENE
 --
 function enter_scene()
+	arc_res(1,8)
+	arc_res(2,8)
 	saving = false
 	scene_action = "load"
 end
@@ -223,7 +268,7 @@ end
 function delta_edit(n,d)
 	if param == 1 then
 		local l = cc[edit_n][n].min
-		local a = clamp(l - d,0,127)
+		local a = clamp(l + d,0,127)
 		if l ~= a then
 			cc[edit_n][n].min = a
 			midi_cc(cc[edit_n][n].cc,a,cc[edit_n][n].ch)
@@ -231,7 +276,7 @@ function delta_edit(n,d)
 		end
 	elseif param == 2 then
 		local l = cc[edit_n][n].max
-		local a = clamp(l - d,0,127)
+		local a = clamp(l + d,0,127)
 		if l ~= a then
 			cc[edit_n][n].max = a
 			midi_cc(cc[edit_n][n].cc,a,cc[edit_n][n].ch)
@@ -239,9 +284,10 @@ function delta_edit(n,d)
 		end
 	elseif param == 3 then
 		local l = cc[edit_n][n].slew
-		local a = clamp(l - d,0,127)
+		local a = clamp(l + d,0,127)
 		if l ~= a then
 			cc[edit_n][n].slew = a
+			--print("slew = "..a)
 			dirty = true
 		end
 	elseif param == 4 then
@@ -261,7 +307,7 @@ function delta_edit(n,d)
 			dirty = true
 		end
 	elseif param == 6 then
-		cc[edit_n][n].a = d<0
+		cc[edit_n][n].a = d>0
 		dirty = true
 	end
 end
@@ -270,8 +316,8 @@ function redraw_edit()
 	for n=1,4 do
 		local act = cc[edit_n][n].a and 1 or 0
 		arc_led_all(n,0)
-		arc_led(n,30,param == 1 and 10 or act)
-		arc_led(n,36,param == 2 and 10 or act)
+		arc_led(n,36,param == 1 and 10 or act)
+		arc_led(n,30,param == 2 and 10 or act)
 		arc_led(n,33,param == 3 and 10 or act)
 		if param == 1 then
 			point2(n,cc[edit_n][n].min * 8)
@@ -318,8 +364,6 @@ function redraw()
 		dirty = false
 	end
 end
-set_mode(1)
-rm = metro.new(redraw, 33, -1)
 
 
 function arc_key(z)
@@ -367,14 +411,21 @@ function key_timer()
 				set_mode(1)
 				print("LOAD PSET")
 				print("TO NORMAL MODE")
+				slew.allfreeze()
 				pset_write(1,meta)
-				-- TODO STOP SLEWS!
 				cc = pset_read(1+(meta.bank-1)*8+meta.scene)
+				-- reset slew positions:
+				for n=1,4 do
+					for k=1,4 do
+						slew.to(sl[n][k], cc.p[n], 0)
+					end
+				end
 				-- CAN REMOVE LATER:
 				if not cc[1][1].ch then for x=1,4 do for y=1,4 do cc[x][y].ch = 1 end end end
 				if not cc[1][1].a then for x=1,4 do for y=1,4 do cc[x][y].a = true end end end
 			else
-				print("NO PSET HERE")
+				print("BLANK PSET HERE")
+				init_cc()
 			end
 		elseif scene_action == "erase" then
 			print("ERASED SLOT")
@@ -414,7 +465,7 @@ function pointr3(n,x)
 end
 
 function point2(n,x)
-	local xx = math.floor(linlin(0,RANGE,1,768,RANGE-x)) + 128 + 512
+	local xx = math.floor(linlin(0,RANGE,1,768,x)) + 128 + 512
 	local c = xx >> 4
 	arc_led_rel(n,c%64+1,15-(xx%16))
 	arc_led_rel(n,(c+1)%64+1,(xx%16))
