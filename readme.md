@@ -6,13 +6,13 @@ for iii arc
 
 _four meta-knobs controlling four MIDI CC each_
 
-# PLAY
+### PLAY
 
-- DELTA n: each knob outputs up to four CC values
+- DELTA N: each knob outputs up to four CC values
 - KEY/SHORT: go to SCENE
 - KEY/LONG: go to EDIT
 
-# SCENE
+### SCENE
 
 Loads, saves, and erases scene data. a scene consists of the settings and current positions of the knobs and CC configuration per knob (min, max, slew, CC, CH, active).
 
@@ -28,7 +28,7 @@ If ring 3/4 are not lit, action is LOAD (default).
 - KEY/SHORT: abort, back to PLAY
 - KEY/LONG: execute action. LOAD (if slot is not empty) will return you to PLAY.
 
-# EDIT
+### EDIT
 
 First you will be presented with which knob to edit, the knobs will pulse. Select by turning the chosen knob either direction slightly. A short timeout will confirm your selection.
 
