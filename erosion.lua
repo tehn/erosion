@@ -174,10 +174,10 @@ function delta_scene(n,d)
 		s[2] = clamp(s[2] - d,1,28)
 		meta.scene = (s[2] >> 2) + 1
 	elseif n==3 then
-		if d<0 then scene_action = "erase"
+		if d>0 then scene_action = "erase"
 		else scene_action = "load" end
 	elseif n==4 then
-		if d<0 then scene_action = "save"
+		if d>0 then scene_action = "save"
 		else scene_action = "load" end
 	end
 	dirty = true
